@@ -8,6 +8,6 @@ DEBUG = True
 
 # Connect to the database
 
-
 # TODO IMPLEMENT DATABASE URL
 SQLALCHEMY_DATABASE_URI = 'postgresql://winst@localhost:5432/fyyurapp' 
+SQLALCHEMY_TRACK_MODIFICATIONS = False
