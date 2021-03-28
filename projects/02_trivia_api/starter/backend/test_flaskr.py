@@ -51,6 +51,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(data['categories']), len(categories))
 
+
     def test_get_paginated_questions(self):
 
         res = self.client().get('/questions')
@@ -63,8 +64,7 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertTrue(len(data['questions']) <= QUESTIONS_PER_PAGE)
         self.assertEqual(data['total_questions'], len(questions)) 
-        # self.assertTrue(len(data['categories']))
-        # self.assertEqual(data['current_category'], 'Categories')
+
 
     def test_get_questions_by_category(self):
         category_id = 1
@@ -72,15 +72,12 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
         
         questions = Question.query.filter(Question.category == category_id).all()
-        # current_category = Category.query.get(category_id).type
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
 
         self.assertTrue(len(data['questions']) <= QUESTIONS_PER_PAGE)
         self.assertEqual(data['total_questions'], len(questions)) 
-        # self.assertTrue(len(data['categories']))
-        # self.assertEqual(data['current_category'], current_category)
 
     def test_404_get_questions_beyond_valid_page(self):
         res = self.client().get('/questions?page=1000')
@@ -129,18 +126,16 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
         self.assertEqual(count_before, count_after)
 
-    # def test_delete_question(self):
-    #     question_id = 5
-    #     res = self.client().delete(f'/questions/{question_id}')
-    #     data = json.loads(res.data)
+    def test_delete_question(self):
+        question_id = 5
+        res = self.client().delete(f'/questions/{question_id}')
+        data = json.loads(res.data)
  
-    #     question = Question.query.filter(Question.id == question_id).one_or_none() 
+        question = Question.query.filter(Question.id == question_id).one_or_none() 
         
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertEqual(question, None) 
-    #     # self.assertTrue(data['total_books'])
-    #     # self.assertTrue(len(data['books]))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(question, None) 
 
     def test_get_question_search_with_results(self):
         search_term = 'Which'
@@ -153,7 +148,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_questions']) 
         self.assertEqual(len(data['questions']), num_results) 
-        #current_category?
  
     def test_get_question_search_without_results(self):
         search_term = 'bitcoin'
@@ -165,8 +159,59 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['total_questions'], 0) # make sure list of books is empty
         self.assertEqual(len(data['questions']), 0)  # also make sure total books is 0
 
-    # Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions.
+    def test_get_quiz_question(self):
+        req_body = {
+            'previous_questions': [], 
+            'quiz_category': {
+                'type': 'All',
+                'id': 0
+            }
+        }
+        res = self.client().post('/quizzes', json=req_body)
+        data = json.loads(res.data)
 
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['question'])
+
+    def test_get_quiz_no_repeat_questions(self):
+        req_body = {
+            'previous_questions': [13, 15], 
+            'quiz_category': {
+                'type': 'Geography',
+                'id': 3
+            }
+        }
+        res = self.client().post('/quizzes', json=req_body)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['question']['id'], 14)
+
+    
+    def test_get_quiz_no_questions_left(self):
+        req_body = {
+            'previous_questions': [13, 14, 15], 
+            'quiz_category': {
+                'type': 'Geography',
+                'id': 3
+            }
+        }
+        res = self.client().post('/quizzes', json=req_body)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['question'], None)
+
+    def test_422_get_quiz_no_category(self):
+        req_body = {
+            'previous_questions': [13, 14, 15], 
+        }
+        res = self.client().post('/quizzes', json=req_body)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'unprocessable')
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

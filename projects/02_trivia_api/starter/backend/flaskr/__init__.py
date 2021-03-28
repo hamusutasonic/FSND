@@ -75,14 +75,8 @@ def create_app(test_config=None):
     category_id = request.args.get('category', None, type=int)
     
     if category_id:
-      # category = Category.query.get(category_id)
-      # if not category: 
-      #   abort(404) #invalid category
-
-      # current_category = category.type
       selection = Question.query.filter(Question.category == category_id).all()
     else:
-      # current_category = 'Categories'
       selection = Question.query.all()
       
     questions = paginate_questions(request, selection)
@@ -126,14 +120,10 @@ def create_app(test_config=None):
         selection = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
         questions = paginate_questions(request, selection)
 
-        # categories = {c.id: c.type for c in Category.query.all()}
-
         return jsonify({
           'success': True, 
           'total_questions': len(selection),
           'questions': questions,
-          # 'categories': categories,
-          # 'current_category': current_category
         })
 
       else:
@@ -152,13 +142,10 @@ def create_app(test_config=None):
               category=new_category
         )        
         question.insert()
-        # selection = Book.query.order_by(Book.id).all()
-        # current_books = paginate_books(request, selection)
+
         return jsonify({
           'success': True, 
-          'created': question.id, 
-          # 'books': current_books,
-          # 'total_books': len(Book.query.all()) 
+          'created': question.id
         })
     except: 
         abort(422)
@@ -179,16 +166,10 @@ def create_app(test_config=None):
           abort(404)
 
       question.delete()
-      # selection = Questiontion.query.order_by(Question.id).all()
-
-      #paginate based on our current selection
-      # current_books = paginate_books(request, selection)
 
       return jsonify({
           'success': True, 
           'deleted': question_id, 
-          # 'books': current_books,
-          # 'total_books': len(Book.query.all()) #info for front-end to udpate
       })
     except: 
       abort(422)
@@ -204,6 +185,25 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def get_quiz_question():
+    body = request.get_json()
+
+    previous_questions = body.get('previous_questions', [])
+    quiz_category = body.get('quiz_category', None)
+    if not quiz_category:
+      abort(422)
+
+    category_id = quiz_category['id'] 
+    if category_id:
+      questions = Question.query.filter(Question.category == category_id, Question.id.notin_(previous_questions)).all()
+    else:
+      questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
+
+    return jsonify({
+      'success': True,
+      'question': random.choice(questions).format() if len(questions) else None
+    })
 
   '''
   @TODO: 
@@ -244,6 +244,7 @@ def create_app(test_config=None):
       "error": 405,
       "message": "method not allowed"
     }), 405
+
 
   return app
 
