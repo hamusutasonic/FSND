@@ -18,8 +18,26 @@ class QuestionView extends Component {
   }
 
   componentDidMount() {
+    // this.getCategories();
     this.getQuestions();
   }
+
+  // getCategories = () => {
+  //   $.ajax({
+  //     url: `/categories`, //TODO: update request URL
+  //     type: "GET",
+  //     success: (result) => {
+  //       this.setState({
+  //         categories: result.categories
+  //       })
+  //       return;
+  //     },
+  //     error: (error) => {
+  //       alert('Unable to load questions. Please try your request again')
+  //       return;
+  //     }
+  //   })
+  // }
 
   getQuestions = () => {
     $.ajax({
@@ -44,6 +62,10 @@ class QuestionView extends Component {
     this.setState({page: num}, () => this.getQuestions());
   }
 
+  // selectCategory(id) {
+  //   this.setState({currentCategory: id})
+  // }
+
   createPagination(){
     let pageNumbers = [];
     let maxPage = Math.ceil(this.state.totalQuestions / 10)
@@ -60,7 +82,8 @@ class QuestionView extends Component {
 
   getByCategory= (id) => {
     $.ajax({
-      url: `/categories/${id}/questions`, //TODO: update request URL
+      // url: `/categories/${id}/questions`, //TODO: update request URL
+      url: `/questions?category=${id}&page=${this.state.page}`, //TODO: update request URL
       type: "GET",
       success: (result) => {
         this.setState({
@@ -82,7 +105,7 @@ class QuestionView extends Component {
       type: "POST",
       dataType: 'json',
       contentType: 'application/json',
-      data: JSON.stringify({searchTerm: searchTerm}),
+      data: JSON.stringify({search: searchTerm}),
       xhrFields: {
         withCredentials: true
       },
@@ -128,7 +151,7 @@ class QuestionView extends Component {
             {Object.keys(this.state.categories).map((id, ) => (
               <li key={id} onClick={() => {this.getByCategory(id)}}>
                 {this.state.categories[id]}
-                <img className="category" src={`${this.state.categories[id].toLowerCase()}.svg`}/>
+                <img className="category" src={`${this.state.categories[id].toString().toLowerCase()}.svg`}/>
               </li>
             ))}
           </ul>
