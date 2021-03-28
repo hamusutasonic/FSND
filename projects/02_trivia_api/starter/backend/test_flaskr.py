@@ -139,7 +139,7 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_get_question_search_with_results(self):
         search_term = 'Which'
-        res = self.client().post('/questions', json={'search': search_term})
+        res = self.client().post('/questions/search', json={'search': search_term})
         data = json.loads(res.data)
 
         num_results = Question.query.filter(Question.question.ilike(f"%{search_term}%")).count()
@@ -151,7 +151,7 @@ class TriviaTestCase(unittest.TestCase):
  
     def test_get_question_search_without_results(self):
         search_term = 'bitcoin'
-        res = self.client().post('/questions', json={'search': search_term})
+        res = self.client().post('/questions/search', json={'search': search_term})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)

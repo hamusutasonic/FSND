@@ -100,6 +100,35 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    body = request.get_json()
+
+    try:
+      new_question = body.get('question', None)
+      new_answer = body.get('answer', None)
+      new_difficulty = body.get('difficulty', None)
+      new_category = body.get('category', None)
+      
+      if not all([new_question, new_category, new_answer, new_difficulty]):
+        abort(422)
+
+      question = Question(
+            question=new_question, 
+            answer=new_answer, 
+            difficulty=new_difficulty, 
+            category=new_category
+      )        
+      question.insert()
+
+      return jsonify({
+        'success': True, 
+        'created': question.id
+      })
+    except: 
+        abort(422)
+
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -110,45 +139,22 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
-  @app.route('/questions', methods=['POST'])
-  def create_question():
+  @app.route('/questions/search', methods=['POST'])
+  def search_question():
     body = request.get_json()
 
     search_term = body.get('search', None)
-    try:
-      if search_term: 
-        selection = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
-        questions = paginate_questions(request, selection)
+    if not search_term:
+      abort(422)
+  
+    selection = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
+    questions = paginate_questions(request, selection)
 
-        return jsonify({
-          'success': True, 
-          'total_questions': len(selection),
-          'questions': questions,
-        })
-
-      else:
-        new_question = body.get('question', None)
-        new_answer = body.get('answer', None)
-        new_difficulty = body.get('difficulty', None)
-        new_category = body.get('category', None)
-        
-        if not all([new_question, new_category, new_answer, new_difficulty]):
-          abort(422)
-
-        question = Question(
-              question=new_question, 
-              answer=new_answer, 
-              difficulty=new_difficulty, 
-              category=new_category
-        )        
-        question.insert()
-
-        return jsonify({
-          'success': True, 
-          'created': question.id
-        })
-    except: 
-        abort(422)
+    return jsonify({
+      'success': True, 
+      'total_questions': len(selection),
+      'questions': questions,
+    })
 
 
   '''

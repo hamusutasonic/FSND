@@ -88,6 +88,11 @@ GET '/categories'
 '6' : "Sports"}
 
 ```
+## EndPoints
+
+#### GET /categories
+
+#### GET /questions
 
 
 ## Testing
