@@ -44,7 +44,7 @@ def create_app(test_config=None):
   '''
   @app.route('/categories', methods=['GET'])
   def get_categories():
-    categories = [c.format() for c in Category.query.all()]
+    categories = {c.id: c.type for c in Category.query.all()}
 
     return jsonify({
       'success': True, 
@@ -75,30 +75,25 @@ def create_app(test_config=None):
     category_id = request.args.get('category', None, type=int)
     
     if category_id:
-      category = Category.query.get(category_id)
-      if not category: 
-        abort(404) #invalid category
+      # category = Category.query.get(category_id)
+      # if not category: 
+      #   abort(404) #invalid category
 
-      current_category = category.type
+      # current_category = category.type
       selection = Question.query.filter(Question.category == category_id).all()
     else:
-      current_category = 'Categories'
+      # current_category = 'Categories'
       selection = Question.query.all()
       
-
     questions = paginate_questions(request, selection)
     
     if len(questions) == 0:
       abort(404)  #invalid page or no questions 
 
-    categories = {c.id: c.type for c in Category.query.all()}
-    
     return jsonify({
       'success': True,
       'total_questions': len(selection),
-      'questions': questions,
-      'categories': categories,
-      'current_category': current_category
+      'questions': questions
     })
 
   '''
@@ -125,29 +120,31 @@ def create_app(test_config=None):
   def create_question():
     body = request.get_json()
 
-    new_question = body.get('question', None)
-    new_answer = body.get('answer', None)
-    new_difficulty = body.get('difficulty', None)
-    new_category = body.get('category', None)
-
     search_term = body.get('search', None)
-
     try:
       if search_term: 
         selection = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
         questions = paginate_questions(request, selection)
 
-        categories = {c.id: c.type for c in Category.query.all()}
+        # categories = {c.id: c.type for c in Category.query.all()}
 
         return jsonify({
           'success': True, 
           'total_questions': len(selection),
           'questions': questions,
-          'categories': categories,
+          # 'categories': categories,
           # 'current_category': current_category
         })
 
       else:
+        new_question = body.get('question', None)
+        new_answer = body.get('answer', None)
+        new_difficulty = body.get('difficulty', None)
+        new_category = body.get('category', None)
+        
+        if not all([new_question, new_category, new_answer, new_difficulty]):
+          abort(422)
+
         question = Question(
               question=new_question, 
               answer=new_answer, 
@@ -195,10 +192,6 @@ def create_app(test_config=None):
       })
     except: 
       abort(422)
-
-
-
-
 
   '''
   @TODO: 

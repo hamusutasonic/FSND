@@ -1,6 +1,7 @@
 .question-view {
   display: flex;
   flex-direction: row;
+  margin: 0px 20px;
 }
 
 .categories-list {
@@ -8,8 +9,30 @@
   flex-shrink: 2;
 }
 
+.categories-list ul {
+  margin-left: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 .categories-list > form {
   width: 60%;
+}
+
+.categories-list li {
+  display: block;
+  line-height: 1.5;
+  text-align: left;
+  padding: 10px 15px 10px 15px;
+}
+
+.categories-list li > img {
+  vertical-align: middle;
+  margin-right: 15px;
+}
+
+.categories-list li.highlight {
+  background-color: #effd2c;
 }
 
 .questions-list {
@@ -19,9 +42,11 @@
 
 .Question-holder {
   padding: 10px 20px;
-  border: 2px black solid;
+  border: 2px rgb(167, 167, 167) solid;
+  border-radius: 4px;
   text-align: left;
   margin: 7px;
+  box-shadow: 1px 1px 1px 1px rgba(10,10,10, 0.1);
 }
 
 .Question-status {
@@ -31,16 +56,19 @@
   width: 200px;
   align-items: center;
   justify-content: space-between;
+  vertical-align: middle;
 }
 
 .Question {
-  font-size: 21px;
+  font-size: 1.3em;
+  padding-bottom: 15px;
   width: 100%;
 }
 
 .answer-holder {
-  font-size: 25px;
-  height: 25px;
+  padding: 15px 0px;
+  font-size: 1.3em;
+  color: orange;
   margin: 5px 0px;
 }
 

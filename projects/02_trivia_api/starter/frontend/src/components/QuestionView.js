@@ -18,37 +18,38 @@ class QuestionView extends Component {
   }
 
   componentDidMount() {
-    // this.getCategories();
+    this.getCategories();
     this.getQuestions();
   }
 
-  // getCategories = () => {
-  //   $.ajax({
-  //     url: `/categories`, //TODO: update request URL
-  //     type: "GET",
-  //     success: (result) => {
-  //       this.setState({
-  //         categories: result.categories
-  //       })
-  //       return;
-  //     },
-  //     error: (error) => {
-  //       alert('Unable to load questions. Please try your request again')
-  //       return;
-  //     }
-  //   })
-  // }
+  getCategories = () => {
+    $.ajax({
+      url: `/categories`, //TODO: update request URL
+      type: "GET",
+      success: (result) => {
+        this.setState({
+          categories: result.categories
+        })
+        return;
+      },
+      error: (error) => {
+        alert('Unable to load questions. Please try your request again')
+        return;
+      }
+    })
+  }
 
   getQuestions = () => {
+    let category_id = this.state.currentCategory;
+    let page = this.state.page;
     $.ajax({
-      url: `/questions?page=${this.state.page}`, //TODO: update request URL
+      url: `/questions?page=${page}&category=${category_id}`, //TODO: update request URL
       type: "GET",
       success: (result) => {
         this.setState({
           questions: result.questions,
-          totalQuestions: result.total_questions,
-          categories: result.categories,
-          currentCategory: result.current_category })
+          totalQuestions: result.total_questions, 
+        })
         return;
       },
       error: (error) => {
@@ -62,9 +63,12 @@ class QuestionView extends Component {
     this.setState({page: num}, () => this.getQuestions());
   }
 
-  // selectCategory(id) {
-  //   this.setState({currentCategory: id})
-  // }
+  selectCategory(id) {
+    this.setState({
+      currentCategory: id, 
+      page: 1  //reset page when new category is seleted
+    }, () => this.getQuestions());
+  }
 
   createPagination(){
     let pageNumbers = [];
@@ -73,31 +77,31 @@ class QuestionView extends Component {
       pageNumbers.push(
         <span
           key={i}
-          className={`page-num ${i === this.state.page ? 'active' : ''}`}
+          className={`page-num ${i === this.state.page ? 'active' : ''} clickable`}
           onClick={() => {this.selectPage(i)}}>{i}
         </span>)
     }
     return pageNumbers;
   }
 
-  getByCategory= (id) => {
-    $.ajax({
-      // url: `/categories/${id}/questions`, //TODO: update request URL
-      url: `/questions?category=${id}&page=${this.state.page}`, //TODO: update request URL
-      type: "GET",
-      success: (result) => {
-        this.setState({
-          questions: result.questions,
-          totalQuestions: result.total_questions,
-          currentCategory: result.current_category })
-        return;
-      },
-      error: (error) => {
-        alert('Unable to load questions. Please try your request again')
-        return;
-      }
-    })
-  }
+  // getByCategory= (id) => {
+  //   $.ajax({
+  //     // url: `/categories/${id}/questions`, //TODO: update request URL
+  //     url: `/questions?category=${id}&page=${this.state.page}`, //TODO: update request URL
+  //     type: "GET",
+  //     success: (result) => {
+  //       this.setState({
+  //         questions: result.questions,
+  //         totalQuestions: result.total_questions,
+  //         currentCategory: result.current_category })
+  //       return;
+  //     },
+  //     error: (error) => {
+  //       alert('Unable to load questions. Please try your request again')
+  //       return;
+  //     }
+  //   })
+  // }
 
   submitSearch = (searchTerm) => {
     $.ajax({
@@ -146,12 +150,15 @@ class QuestionView extends Component {
     return (
       <div className="question-view">
         <div className="categories-list">
-          <h2 onClick={() => {this.getQuestions()}}>Categories</h2>
+          <h2 className='clickable' onClick={() => {this.selectCategory(null)}}>Categories</h2>
           <ul>
             {Object.keys(this.state.categories).map((id, ) => (
-              <li key={id} onClick={() => {this.getByCategory(id)}}>
-                {this.state.categories[id]}
+              <li className={`${id == this.state.currentCategory ? 'highlight' : ''} clickable`}
+                  key={id} 
+                  onClick={() => {this.selectCategory(id)}}>
                 <img className="category" src={`${this.state.categories[id].toString().toLowerCase()}.svg`}/>
+                {this.state.categories[id]}
+                
               </li>
             ))}
           </ul>
