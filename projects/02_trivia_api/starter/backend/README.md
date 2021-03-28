@@ -207,7 +207,7 @@ One note before you delve into your tasks: for each endpoint you are expected to
     "total_questions": 1
 }
 ```
-```
+
 #### DELETE /questions/{question_id}
 - Delete question of the given question ID if question exist. Returns the id of the deleted question if success. 
 - Sample return 
