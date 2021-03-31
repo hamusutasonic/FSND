@@ -126,7 +126,8 @@ def create_app(test_config=None):
         'success': True, 
         'created': question.id
       })
-    except: 
+    except Exception as e: 
+        print(e)
         abort(422)
 
   '''
@@ -177,7 +178,8 @@ def create_app(test_config=None):
           'success': True, 
           'deleted': question_id, 
       })
-    except: 
+    except Exception as e:
+      print(e)  
       abort(422)
 
   '''
