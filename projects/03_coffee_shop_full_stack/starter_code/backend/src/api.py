@@ -28,7 +28,7 @@ db_drop_and_create_all()
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks', method=['GET'])
+@app.route('/drinks', methods=['GET'])
 def get_drinks():
     drinks = Drink.query.all()
     return jsonify({
@@ -44,9 +44,9 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail', methods=['GET'])
 @requires_auth(permission='get:drinks-detail')
-@app.route('/drinks-detail', method=['GET'])
-def get_drinks_detail():
+def get_drinks_detail(jwt):
     drinks = Drink.query.all()
     return jsonify({
         'success': True,
@@ -62,18 +62,21 @@ def get_drinks_detail():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
-requires_auth(permission='post:drinks')
-@app.route('/drinks', method=['POST'])
-def post_drinks():
+@app.route('/drinks', methods=['POST'])
+@requires_auth(permission='post:drinks')
+def post_drinks(jwt):
     body = request.get_json()
 
     try:
-        drink_title = body.get('title', None)
-        drink_recipe = body.get('receipe', None)
+        title = body.get('title', None)
+        recipe = body.get('recipe', None)
 
+        if type(recipe) != list:
+            recipe = [recipe]
+        
         drink = Drink(
-            title=drink_title, 
-            receipe=drink_recipe, 
+            title=title, 
+            recipe=json.dumps(recipe)
         )        
         drink.insert()
 
@@ -96,9 +99,10 @@ def post_drinks():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
-requires_auth(permission='patch:drinks')
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
-def update_drinks(drink_id):
+@requires_auth(permission='patch:drinks')
+def update_drinks(jwt, drink_id):
+    print(jwt, drink_id)
     body = request.get_json()
 
     try:
@@ -109,7 +113,11 @@ def update_drinks(drink_id):
         if 'title' in body:
             drink.title = body.get('title', None)
         if 'recipe' in body:
-            drink.recipe = body.get('receipe') 
+            recipe = body.get('recipe', None)
+            if type(recipe) != list:
+                recipe = [recipe]
+            drink.recipe = json.dumps(recipe)
+
         drink.update()
 
         return jsonify({
@@ -130,11 +138,11 @@ def update_drinks(drink_id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-requires_auth(permission='delete:drinks')
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
-def delete_drinks(drink_id):
+@requires_auth(permission='delete:drinks')
+def delete_drinks(jwt, drink_id):
     try: 
-        drink = Drink.query.fitler(Drink.id == drink_id).one_or_none()
+        drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
         if drink is None:
             abort(404)
         
@@ -166,7 +174,7 @@ def bad_request(error):
         "success": False,
         "error": 400,
         "message": "bad request"
-    }), 404
+    }), 400
 
 @app.errorhandler(401)
 def unauthorized(error):
@@ -174,7 +182,7 @@ def unauthorized(error):
         "success": False,
         "error": 401,
         "message": "unauthorized access"
-    }), 404
+    }), 401
 
 @app.errorhandler(403)
 def forbidden(error):
@@ -182,7 +190,7 @@ def forbidden(error):
         "success": False,
         "error": 403,
         "message": "access is forbidden"
-    }), 404
+    }), 403
 
 @app.errorhandler(404)
 def resource_not_found(error):
