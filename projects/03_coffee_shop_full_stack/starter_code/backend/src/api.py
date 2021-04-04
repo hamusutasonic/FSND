@@ -102,7 +102,6 @@ def post_drinks(jwt):
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth(permission='patch:drinks')
 def update_drinks(jwt, drink_id):
-    print(jwt, drink_id)
     body = request.get_json()
 
     try:
