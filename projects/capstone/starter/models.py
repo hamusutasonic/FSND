@@ -11,7 +11,6 @@ DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 DB_NAME = os.getenv('DB_NAME', 'volunteer_app')  
 DB_PATH = 'postgresql+psycopg2://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
 
-
 class ModelMixin(object):
     def insert(self):
         db.session.add(self)
@@ -23,18 +22,6 @@ class ModelMixin(object):
     
     def update(self):
         db.session.commit()
-    
-    # def format(self):
-    #     columns = inspect(self.__class__).attrs.keys()
-        
-    #     result = dict()
-    #     for c in columns:
-    #         v = getattr(self, c)
-    #         if isinstance(v, db.Model):
-    #             v = v.format()
-    #         result[c] = v
-    #     return result
-        # return {c: getattr(self, c) for c in columns}
 
 db = SQLAlchemy()
 
@@ -67,6 +54,7 @@ class Organisation(ModelMixin, db.Model):
     __tablename__ = 'organisation'
 
     id = Column(Integer, primary_key=True)
+    auth0_uid = Column(String, unique=True)
     name = Column(String, nullable=False)
     description = Column(String)
     website = Column(String)
@@ -123,7 +111,8 @@ class Event(ModelMixin, db.Model):
             'start_datetime': self.start_datetime,
             'end_datetime': self.end_datetime,
             'address': self.address,
-            'organiser': {
+            'organisation_id': self.organisation_id,
+            'organisation': {
                 'id': self.organisation_id,
                 'name': self.organisation.name,
             },
@@ -140,6 +129,7 @@ class User(ModelMixin, db.Model):
     __tablename__ = 'user'
     
     id = Column(Integer, primary_key=True)
+    auth0_uid = Column(String, unique=True)
     name = Column(String, nullable=False)
     age = Column(Integer)
     email_contact = Column(String)

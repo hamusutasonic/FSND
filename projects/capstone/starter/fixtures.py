@@ -13,11 +13,12 @@ def reset_db_with_fixtures(db=db):
     # Fixtures - organisation 
     #----------------------------------------------------------------------------#
     org0 = Organisation(
-        name = 'Test',
-        description = 'This is a test description',
+        auth0_uid =  'auth0|60c58135612d820070a5f049',
+        name = 'Test Organisation',
+        description = 'Test organisation authenticated through Auth0',
         website = 'http://mywebsite.com',
         phone_contact = '1111111',
-        email_contact = 'myemail@test.com'
+        email_contact = 'test_org_01@test.com'
     )
     org0.insert()
     
@@ -43,9 +44,10 @@ def reset_db_with_fixtures(db=db):
     #----------------------------------------------------------------------------#
 
     u0 = User(
-        name = 'User00', 
+        auth0_uid = 'auth0|60c58174612d820070a5f057',
+        name = 'Test User', 
         age = 17,
-        email_contact = 'user00@test.com',
+        email_contact = 'test_user_01@test.com',
         phone_contact = '1111111',
         join_date = datetime(2020,5,21,21,30,0),
         skills = ['cooking', 'web development']
