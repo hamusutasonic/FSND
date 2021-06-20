@@ -22,6 +22,24 @@ DB_PATH = 'postgresql+psycopg2://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HO
 db = setup_db(app,  database_path=DB_PATH)
 client = app.test_client
 
+"""
+Sample payload
+{
+  "iss": "https://dev--3lz2zai.us.auth0.com/",
+  "sub": "auth0|60c58135612d820070a5f049",
+  "aud": "volunteer_app",
+  "iat": 1624165346,
+  "exp": 1624172546,
+  "azp": "58E0NNPVPMGakxyx3c3FMY5l8Zoh3WJe",
+  "scope": "",
+  "permissions": [
+    "create:event",
+    "delete:event",
+    "update:event"
+  ]
+}
+"""
+
 class VolunteerAppTest(unittest.TestCase):
     def setUp(self):
         """reset test db with fixtures before each run"""
@@ -59,7 +77,10 @@ class VolunteerAppTest(unittest.TestCase):
     @patch('auth.verify_decode_jwt')
     def test_create_event_success(self, mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'create:event'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['create:event']
+        }
 
         count_before = Event.query.count()
         res = client().post('/events', json={
@@ -73,13 +94,14 @@ class VolunteerAppTest(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(count_before+1, count_after)
 
-        #todo, test organisation exist 
-
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
-    def test_create_event_not_permitted(self, mock_verify_decode_jwt, mock_get_auth_header):
+    def test_create_event_not_permitted_role(self, mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'update:event'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['update:event']
+        }
         
         res = client().post('/events', json={
             'name': 'new event',
@@ -91,18 +113,52 @@ class VolunteerAppTest(unittest.TestCase):
         self.assertEqual(res.status_code, 403)
         self.assertEqual(data['message'], 'unauthorized')
 
+    @patch('auth.get_token_auth_header')
+    @patch('auth.verify_decode_jwt')
+    def test_create_event_not_permitted_wrong_id(self, mock_verify_decode_jwt, mock_get_auth_header):
+        mock_get_auth_header.return_value = 'some_token'
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['create:event']
+        }
+        
+        res = client().post('/events', json={
+            'name': 'new event',
+            'organisation_id': 2
+        })
+        data = json.loads(res.data)
 
-    #todo
-    def test_create_event_mismatch_id(self):
-        #mismatch org
-        #org not found
-        pass
+        self.assertEqual(data['success'], False)
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(data['message'], 'access is forbidden')
+
+
+    @patch('auth.get_token_auth_header')
+    @patch('auth.verify_decode_jwt')
+    def test_create_event_org_not_found(self, mock_verify_decode_jwt, mock_get_auth_header):
+        mock_get_auth_header.return_value = 'some_token'
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['create:event']
+        }
+        res = client().post('/events', json={
+            'name': 'new event',
+            'organisation_id': 100
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(data['success'], False)
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['message'], 'unprocessable')
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
     def test_update_event_success(self, mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'update:event'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['update:event']
+        }
         
         #update name field
         event_id = 1
@@ -118,7 +174,10 @@ class VolunteerAppTest(unittest.TestCase):
     @patch('auth.verify_decode_jwt')
     def test_update_event_not_found(self, mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'update:event'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['update:event']
+        }
 
         event_id = 1000
         res = client().patch(f'/events/{event_id}', json={
@@ -132,9 +191,12 @@ class VolunteerAppTest(unittest.TestCase):
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
-    def test_update_event_not_permitted(self,  mock_verify_decode_jwt, mock_get_auth_header):
+    def test_update_event_not_permitted_role(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': ''}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': []
+        }
 
         event_id = 1
         res = client().patch(f'/events/{event_id}', json={
@@ -146,13 +208,32 @@ class VolunteerAppTest(unittest.TestCase):
         self.assertEqual(data['message'], 'unauthorized')
         
 
-    #todo: update event wrong organisation id
+    @patch('auth.get_token_auth_header')
+    @patch('auth.verify_decode_jwt')
+    def test_update_event_not_permitted_wrong_id(self,  mock_verify_decode_jwt, mock_get_auth_header):
+        mock_get_auth_header.return_value = 'some_token'
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'ranomd_string',
+            'permissions': ['update:event']
+        }
+
+        event_id = 1
+        res = client().patch(f'/events/{event_id}', json={
+            'name': 'new name'
+        })
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'access is forbidden')
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
     def test_delete_event_success(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'delete:event'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['delete:event']
+        }
 
         event_id = 1
         res = client().delete(f'/events/{event_id}')
@@ -169,7 +250,10 @@ class VolunteerAppTest(unittest.TestCase):
     @patch('auth.verify_decode_jwt')
     def test_delete_event_not_found(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'delete:event'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': ['delete:event']
+        }
 
         event_id = 1000
         res = client().delete(f'/events/{event_id}')
@@ -182,9 +266,12 @@ class VolunteerAppTest(unittest.TestCase):
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
-    def test_delete_event_not_permitted(self,  mock_verify_decode_jwt, mock_get_auth_header):
+    def test_delete_event_not_permitted_role(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': ''}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58135612d820070a5f049',
+            'permissions': []
+        }
         
         event_id = 1
         res = client().delete(f'/events/{event_id}')
@@ -198,13 +285,34 @@ class VolunteerAppTest(unittest.TestCase):
         self.assertTrue(event) #check event is not deleted    
 
     
-    #todo: delete event not permitted wrong org_id
+    @patch('auth.get_token_auth_header')
+    @patch('auth.verify_decode_jwt')
+    def test_delete_event_not_permitted_wrong_id(self,  mock_verify_decode_jwt, mock_get_auth_header):
+        mock_get_auth_header.return_value = 'some_token'
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'some_id',
+            'permissions': ['delete:event']
+        }
+        
+        event_id = 1
+        res = client().delete(f'/events/{event_id}')
+        data = json.loads(res.data)
+
+        event = Event.query.get(event_id)
+
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'access is forbidden')
+        self.assertTrue(event) #check event is not deleted    
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
     def test_add_event_participant_success(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'add:event-participant'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58174612d820070a5f057',
+            'permissions': ['add:event-participant']
+        }
         
         user_id = 1
         event_id = 1
@@ -229,7 +337,10 @@ class VolunteerAppTest(unittest.TestCase):
     @patch('auth.verify_decode_jwt')
     def test_add_event_participant_event_not_found(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'add:event-participant'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58174612d820070a5f057',
+            'permissions': ['add:event-participant']
+        }
 
         user_id = 1
         event_id = 1000
@@ -244,9 +355,12 @@ class VolunteerAppTest(unittest.TestCase):
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
-    def test_add_event_participant_not_permitted(self,  mock_verify_decode_jwt, mock_get_auth_header):
+    def test_add_event_participant_not_permitted_role(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': ''}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58174612d820070a5f057',
+            'permissions': []
+        }
         
         user_id = 1
         event_id = 1
@@ -267,15 +381,45 @@ class VolunteerAppTest(unittest.TestCase):
         event = Event.query.get(event_id)
         self.assertEqual(event.participants, [])
 
-    #todo: add participant invalid or not permitted user_id
+    @patch('auth.get_token_auth_header')
+    @patch('auth.verify_decode_jwt')
+    def test_add_event_participant_not_permitted_role(self,  mock_verify_decode_jwt, mock_get_auth_header):
+        mock_get_auth_header.return_value = 'some_token'
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'some value',
+            'permissions': ['add:event-participant']
+        }
+        
+        user_id = 1
+        event_id = 1
+
+        event = Event.query.get(event_id)
+        event.participants = []
+        event.update()
+
+        res = client().post(f'/events/{event_id}/participants', json={
+            'user_id': user_id
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'access is forbidden')
+        
+        event = Event.query.get(event_id)
+        self.assertEqual(event.participants, [])
+
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
     def test_remove_event_participant_success(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'remove:event-participant'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58174612d820070a5f057',
+            'permissions': ['remove:event-participant']
+        }
         
-        user_id = 3
+        user_id = 1
         event_id = 1
 
         user = User.query.get(user_id)
@@ -298,7 +442,10 @@ class VolunteerAppTest(unittest.TestCase):
     @patch('auth.verify_decode_jwt')
     def test_remove_event_participant_event_not_found(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': 'remove:event-participant'}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58174612d820070a5f057',
+            'permissions': ['remove:event-participant']
+        }
 
         user_id = 1
         event_id = 1000
@@ -314,11 +461,14 @@ class VolunteerAppTest(unittest.TestCase):
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
-    def test_remove_event_participant_not_permitted(self,  mock_verify_decode_jwt, mock_get_auth_header):
+    def test_remove_event_participant_not_permitted_role(self,  mock_verify_decode_jwt, mock_get_auth_header):
         mock_get_auth_header.return_value = 'some_token'
-        mock_verify_decode_jwt.return_value = {'permissions': ''}
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'auth0|60c58174612d820070a5f057',
+            'permissions': []
+        }
 
-        user_id = 3
+        user_id = 1
         event_id = 1
 
         user = User.query.get(user_id)
@@ -339,7 +489,34 @@ class VolunteerAppTest(unittest.TestCase):
         self.assertEqual(len(event.participants), 1)
         
 
-    #todo: remove participant invalid or not permitted user_id
+    @patch('auth.get_token_auth_header')
+    @patch('auth.verify_decode_jwt')
+    def test_remove_event_participant_not_permitted_wrong_id(self,  mock_verify_decode_jwt, mock_get_auth_header):
+        mock_get_auth_header.return_value = 'some_token'
+        mock_verify_decode_jwt.return_value = {
+            'sub': 'wrong id',
+            'permissions': ['remove:event-participant']
+        }
+
+        user_id = 1
+        event_id = 1
+
+        user = User.query.get(user_id)
+        event = Event.query.get(event_id)
+        event.participants = [user]
+        event.update()
+
+        res = client().delete(f'/events/{event_id}/participants', json={
+            'user_id': user_id
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'access is forbidden')
+
+        event = Event.query.get(event_id)
+        self.assertEqual(len(event.participants), 1)
 
 
     def test_get_all_organisations(self):
@@ -370,12 +547,6 @@ class VolunteerAppTest(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'resource not found')
       
-
-    #test token errors
-    #expired token
-    #malformed header?
-    #?
-
 
 if __name__ == "__main__":
     unittest.main()

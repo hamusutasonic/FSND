@@ -46,14 +46,19 @@ Create an event
 @app.route('/events', methods=['POST'])
 @requires_auth(permission='create:event')
 def create_event(jwt_payload):
-# def create_event():
     body = request.get_json()
-    try:
-        org_id = body.get('organisation_id', None)
-        org = Organisation.query.get(org_id)
-        if not org:
-            abort(422)
+    
+    org_id = body.get('organisation_id', None)
+    org = Organisation.query.get(org_id)
+    if not org:
+        abort(422)
 
+    #login user different from resource user
+    auth0_id = jwt_payload.get('sub', None)
+    if org.auth0_id != auth0_id:
+        abort(403)
+        
+    try:
         # nullable checking, foreign_id checking, datetime format 
         # checking all done at database layer
         event = Event(**body)
@@ -73,11 +78,18 @@ Update an event
 @requires_auth(permission='update:event')
 def update_event(jwt_payload, event_id):
     body = request.get_json()
+
+    event = Event.query.get(event_id)
+    if not event:
+        abort(422)
+
+    #login user different from resource user
+    org = event.organisation
+    auth0_id = jwt_payload.get('sub', None)
+    if org.auth0_id != auth0_id:
+        abort(403)
+
     try:
-        event = Event.query.get(event_id)
-        if not event:
-            raise
-        
         # nullable checking, foreign_id checking, datetime format 
         # checking all done at database layer
         for key, value in body.items():
@@ -98,11 +110,18 @@ Delete an event
 @app.route('/events/<int:event_id>', methods=['DELETE'])
 @requires_auth(permission='delete:event')
 def delete_event(jwt_payload, event_id):
-    try: 
-        event = Event.query.get(event_id)
-        if not event:
-            raise 
+    
+    event = Event.query.get(event_id)
+    if not event:
+        abort(422)
 
+    #login user different from resource user
+    org = event.organisation
+    auth0_id = jwt_payload.get('sub', None)
+    if org.auth0_id != auth0_id:
+        abort(403)
+
+    try:
         event.delete()
 
         return jsonify({
@@ -121,12 +140,16 @@ Add user to event
 def add_user_to_event(jwt_payload, event_id):
     body = request.get_json()
 
-    try:
-        user_id = body.get('user_id', None)
-        user = User.query.get(user_id)
-        if not user:
-            abort(422) #should raise not permitted error?
+    user_id = body.get('user_id', None)
+    user = User.query.get(user_id)
+    if not user:
+        abort(422) 
+    
+    auth0_id = jwt_payload.get('sub', None)
+    if user.auth0_id != auth0_id:
+        abort(403, 'not permitted')
 
+    try:
         event = Event.query.get(event_id)
         if not event:
             raise 
@@ -150,12 +173,16 @@ Remove user from event
 def remove_user_from_event(jwt_payload, event_id):
     body = request.get_json()
 
-    try:
-        user_id = body.get('user_id', None)
-        user = User.query.get(user_id)
-        if not user:
-            abort(422) #should raise not permitted error?
+    user_id = body.get('user_id', None)
+    user = User.query.get(user_id)
+    if not user:
+        abort(422) 
 
+    auth0_id = jwt_payload.get('sub', None)
+    if user.auth0_id != auth0_id:
+        abort(403, 'not permitted')
+
+    try:
         event = Event.query.get(event_id)
         if not event: 
             raise

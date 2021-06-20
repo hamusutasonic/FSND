@@ -54,7 +54,7 @@ class Organisation(ModelMixin, db.Model):
     __tablename__ = 'organisation'
 
     id = Column(Integer, primary_key=True)
-    auth0_uid = Column(String, unique=True)
+    auth0_id = Column(String, unique=True)
     name = Column(String, nullable=False)
     description = Column(String)
     website = Column(String)
@@ -129,7 +129,7 @@ class User(ModelMixin, db.Model):
     __tablename__ = 'user'
     
     id = Column(Integer, primary_key=True)
-    auth0_uid = Column(String, unique=True)
+    auth0_id = Column(String, unique=True)
     name = Column(String, nullable=False)
     age = Column(Integer)
     email_contact = Column(String)

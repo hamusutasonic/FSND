@@ -13,7 +13,7 @@ def reset_db_with_fixtures(db=db):
     # Fixtures - organisation 
     #----------------------------------------------------------------------------#
     org0 = Organisation(
-        auth0_uid =  'auth0|60c58135612d820070a5f049',
+        auth0_id =  'auth0|60c58135612d820070a5f049',
         name = 'Test Organisation',
         description = 'Test organisation authenticated through Auth0',
         website = 'http://mywebsite.com',
@@ -44,7 +44,7 @@ def reset_db_with_fixtures(db=db):
     #----------------------------------------------------------------------------#
 
     u0 = User(
-        auth0_uid = 'auth0|60c58174612d820070a5f057',
+        auth0_id = 'auth0|60c58174612d820070a5f057',
         name = 'Test User', 
         age = 17,
         email_contact = 'test_user_01@test.com',
