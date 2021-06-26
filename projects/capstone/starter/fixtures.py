@@ -90,7 +90,6 @@ def reset_db_with_fixtures(db=db):
 
     e0 = Event(
         name = 'test event 0',
-        type = 'volunteer',
         description = 'this is a test event',
         start_datetime = datetime(2021, 1, 12, 10, 0, 0),
         end_datetime = datetime(2021, 1, 12, 12, 0, 0),
@@ -102,7 +101,6 @@ def reset_db_with_fixtures(db=db):
 
     e1 = Event(
         name = 'test event 1',
-        type = 'volunteer',
         description = 'this is a test event',
         start_datetime = datetime(2021, 1, 12, 17, 0, 0),
         end_datetime = datetime(2021, 1, 12, 18, 0, 0),
@@ -114,7 +112,6 @@ def reset_db_with_fixtures(db=db):
 
     e2 = Event(
         name = 'test event 2',
-        type = 'volunteer',
         description = 'this is a test event',
         start_datetime = datetime(2021, 3, 1, 10, 0, 0),
         end_datetime = datetime(2021, 3, 1, 12, 0, 0),
@@ -126,7 +123,6 @@ def reset_db_with_fixtures(db=db):
 
     e3 = Event(
         name = 'test event 3',
-        type = 'volunteer',
         description = 'this is a test event',
         start_datetime = datetime(2021, 4, 1, 10, 0, 0),
         end_datetime = datetime(2021, 4, 1, 12, 0, 0),
@@ -138,7 +134,6 @@ def reset_db_with_fixtures(db=db):
 
     e4 = Event(
         name = 'test event 4',
-        type = 'volunteer',
         description = 'this is a test event',
         start_datetime = datetime(2021, 5, 1, 10, 0, 0),
         end_datetime = datetime(2021, 5, 1, 12, 0, 0),

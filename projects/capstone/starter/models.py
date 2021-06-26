@@ -83,7 +83,6 @@ class Event(ModelMixin, db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    type = Column(String) 
     description = Column(String)
     start_datetime = Column(DateTime)
     end_datetime = Column(DateTime)
@@ -106,7 +105,6 @@ class Event(ModelMixin, db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'type': self.type,
             'description': self.description,
             'start_datetime': self.start_datetime,
             'end_datetime': self.end_datetime,

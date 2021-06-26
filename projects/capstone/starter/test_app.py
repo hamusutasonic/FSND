@@ -22,23 +22,6 @@ DB_PATH = 'postgresql+psycopg2://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HO
 db = setup_db(app,  database_path=DB_PATH)
 client = app.test_client
 
-"""
-Sample payload
-{
-  "iss": "https://dev--3lz2zai.us.auth0.com/",
-  "sub": "auth0|60c58135612d820070a5f049",
-  "aud": "volunteer_app",
-  "iat": 1624165346,
-  "exp": 1624172546,
-  "azp": "58E0NNPVPMGakxyx3c3FMY5l8Zoh3WJe",
-  "scope": "",
-  "permissions": [
-    "create:event",
-    "delete:event",
-    "update:event"
-  ]
-}
-"""
 
 class VolunteerAppTest(unittest.TestCase):
     def setUp(self):
