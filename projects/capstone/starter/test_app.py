@@ -71,11 +71,13 @@ class VolunteerAppTest(unittest.TestCase):
             'organisation_id': 1
         })
         data = json.loads(res.data)
-        event = Event.query.get(int(data['created']))
+        event_id = data['created']['id']
+        event = Event.query.get(event_id)
         count_after = Event.query.count()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(count_before+1, count_after)
+        self.assertEqual(event.name, data['created']['name'])
 
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
@@ -151,7 +153,7 @@ class VolunteerAppTest(unittest.TestCase):
         data = json.loads(res.data)
         event = Event.query.get(event_id)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(event.name, data['data']['name'])
+        self.assertEqual(event.name, data['updated']['name'])
   
     @patch('auth.get_token_auth_header')
     @patch('auth.verify_decode_jwt')
@@ -311,9 +313,9 @@ class VolunteerAppTest(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-
         event = Event.query.get(event_id)
-        self.assertIn(user_id, [u.id for u in event.participants])
+        self.assertIn(user_id, [u.id for u in event.participants]) #check db
+        self.assertIn(user_id, data['updated']['event_participants']) #check output
 
 
     @patch('auth.get_token_auth_header')
@@ -519,7 +521,8 @@ class VolunteerAppTest(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['data']['id'], org_id)
-
+        self.assertIn('past_events', data['data'].keys())
+        self.assertIn('upcoming_events', data['data'].keys())
 
     def test_get_organisation_not_found(self):
         org_id = 100

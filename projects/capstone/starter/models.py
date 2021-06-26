@@ -1,7 +1,7 @@
 import os
 import json
 
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, ARRAY, inspect
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, ARRAY, CheckConstraint
 from sqlalchemy.sql.sqltypes import DateTime
 from flask_sqlalchemy import SQLAlchemy
 
@@ -10,6 +10,12 @@ DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')  
 DB_NAME = os.getenv('DB_NAME', 'volunteer_app')  
 DB_PATH = 'postgresql+psycopg2://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+
+def format_datetime(dt):
+    """Ensure datetime objects are formatted consistently 
+    in the API returns
+    """
+    return dt.isoformat() if dt else None
 
 class ModelMixin(object):
     def insert(self):
@@ -80,6 +86,10 @@ Event
 '''
 class Event(ModelMixin, db.Model):
     __tablename__ = 'event'
+    __table_args__ = (
+        CheckConstraint('end_datetime > start_datetime', 
+            name='start date must be earlier than end date'),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
@@ -88,12 +98,6 @@ class Event(ModelMixin, db.Model):
     end_datetime = Column(DateTime)
     address = Column(String)
 
-    
-    #tags / interests / category? 
-    #required_skills?
-
-    #number of volunteers required?
-
     #event is child of organisation 
     organisation_id = Column(Integer, ForeignKey('organisation.id'), nullable=False)
 
@@ -101,24 +105,30 @@ class Event(ModelMixin, db.Model):
     participants = db.relationship('User', secondary=event_users,
         backref=db.backref('events', lazy="joined"))
 
-    def format(self):
-        return {
+    def format(self, include_org=True, include_participants=True):
+        formatted = {
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'start_datetime': self.start_datetime,
-            'end_datetime': self.end_datetime,
+            'start_datetime': format_datetime(self.start_datetime),
+            'end_datetime': format_datetime(self.end_datetime),
             'address': self.address,
-            'organisation_id': self.organisation_id,
-            'organisation': {
-                'id': self.organisation_id,
-                'name': self.organisation.name,
-            },
-            'participants': [{
-                'id': user.id,
-                'name': user.name
-            } for user in self.participants]
-        }    
+        }
+        if include_org:
+            formatted.update({
+                'organisation': {
+                    'id': self.organisation_id,
+                    'name': self.organisation.name,
+                }
+            })
+        if include_participants:
+            formatted.update({
+                'participants': [{
+                    'id': user.id,
+                    'name': user.name
+                } for user in self.participants]
+            })
+        return formatted 
 '''
 User
     entity that can participate in events

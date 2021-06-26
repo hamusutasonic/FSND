@@ -49,7 +49,7 @@ def create_event(jwt_payload):
     body = request.get_json()
     
     org_id = body.get('organisation_id', None)
-    org = Organisation.query.get(org_id)
+    org = Organisation.query.get(org_id) 
     if not org:
         abort(422)
 
@@ -65,7 +65,7 @@ def create_event(jwt_payload):
         event.insert()
         return jsonify({
             'success': True,
-            'created': event.id
+            'created': event.format()
         })
     except Exception as e:
         print(e)
@@ -98,7 +98,7 @@ def update_event(jwt_payload, event_id):
         event.update()
         return jsonify({
             'success': True,
-            'data': event.format()
+            'updated': event.format()
         })
     except Exception as e:
         print(e)
@@ -159,7 +159,10 @@ def add_user_to_event(jwt_payload, event_id):
 
         return jsonify({
             'success': True,
-            'data': [u.id for u in event.participants]
+            'updated': {
+                'event_id': event.id,
+                'event_participants': [u.id for u in event.participants]
+            }
         })
     except Exception as e:
         print(e)
@@ -192,7 +195,10 @@ def remove_user_from_event(jwt_payload, event_id):
 
         return jsonify({
             'success': True,
-            'data': [u.id for u in event.participants]
+            'updated': {
+                'event_id': event.id,
+                'event_participants': [u.id for u in event.participants]
+            }
         })
     except Exception as e:
         print(e)
@@ -225,9 +231,9 @@ def get_organisation(organisation_id):
     upcoming_events = []
     for event in organisation.events:
         if event.end_datetime <= datetime.now():
-            past_events.append(event.format())
+            past_events.append(event.format(include_org=False))
         else:
-            upcoming_events.append(event.format())
+            upcoming_events.append(event.format(include_org=False))
     data['past_events'] = past_events
     data['upcoming_events'] = upcoming_events
     

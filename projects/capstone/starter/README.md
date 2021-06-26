@@ -1,7 +1,8 @@
 # Capstone Project - Volunteer App 
 
 ## About
-...
+This is a mock API for a Volunteer App services where Non-Profit / Charitable organisations 
+can post volunteering events while users who are interested to volunteer for any of these events can sign up for the event. 
 
 ## Getting Started
 
@@ -17,7 +18,7 @@ We recommend working within a virtual environment whenever using Python for proj
 
 #### PIP Dependencies
 
-Once you have your virtual environment setup and running, install dependencies by navigating to the `/backend` directory and running:
+Once you have your virtual environment setup and running, install dependencies by navigating to the directory where this repository is and run:
 
 ```bash
 pip install -r requirements.txt
@@ -25,19 +26,13 @@ pip install -r requirements.txt
 
 This will install all of the required packages we selected within the `requirements.txt` file.
 
-##### Key Dependencies
-
-- [Flask](http://flask.pocoo.org/)  is a lightweight backend microservices framework. Flask is required to handle requests and responses.
-
-- [SQLAlchemy](https://www.sqlalchemy.org/) is the Python SQL toolkit and ORM we'll use handle the lightweight sqlite database. You'll primarily work in app.py and can reference models.py. 
-
-- [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross origin requests from our frontend server. 
-
 ## Database Setup
 With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
 ```bash
 psql trivia < trivia.psql
 ```
+
+## Use docker? 
 
 ## Running the server
 
@@ -71,213 +66,282 @@ One note before you delve into your tasks: for each endpoint you are expected to
 
 ## EndPoints
 
+Endpoints are protected via OAuth2 Access Tokens. To access protected endpoints, pass in a valid token using the `Authorization: 'Bearer {ACCESS_TOKEN}'` header along with the API request. For public endpoints, no access token is required. 
+
 #### GET /events
-- Get all volunteering events 
-- 
-- Sample Returns 
-```
-{
-    "success": true,
-    "data": [{
-        "id": 1, 
-        "name": ,
-        "descripton": event descripton, 
-        "
-    }, ...]
-}
-```
+Get all events. 
+- Permission: Public
+- Request Body: None
+- Response: 
+    ```json
+    {
+        "success": true,
+        "data": [{
+            "name": "new event",
+            "address": "London SW1A 0AA, UK",
+            "description": "new volunteer event",
+            "start_datetime": "2021-01-12T10:00:00",
+            "end_datetime": "2021-01-12T12:00:00",
+            "id": 1,
+            "organisation": {
+                "id": 1,
+                "name": "my charity organisation"
+            },
+            "organisation_id": 1,
+            "participants": [
+                {
+                    "id": 1,
+                    "name": "Tom"
+                },
+                {
+                    "id": 2,
+                    "name": "Sally"
+                }
+            ],
+        }, ...]
+    }
+    ```
 
 #### GET /events/{event_id}
+Get details of a specific event
+- Permission: Public
+- Request Body: None
+- Response:
+    ```json
+    {
+        "success": true,
+        "data": {
+            "name": "new event",
+            "address": "London SW1A 0AA, UK",
+            "description": "new volunteer event",
+            "start_datetime": "2021-01-12T10:00:00",
+            "end_datetime": "2021-01-12T12:00:00",
+            "id": 1,
+            "organisation": {
+                "id": 1,
+                "name": "my charity organisation"
+            },
+            "organisation_id": 1,
+            "participants": [
+                {
+                    "id": 1,
+                    "name": "Tom"
+                },
+                {
+                    "id": 2,
+                    "name": "Sally"
+                }
+            ],
+        }
+    }
+    ```
 
-#### POST /events
+#### POST /events 
+Create a new event. 
+- Permission: Organisation users only
+- Request Body: 
+    ```json
+    {
+        "name": "event name", //required
+        "organisation_id": 1, //required
+        "address": "event venue",
+        "description": "event description",
+        "start_datetime": "2021-01-12T10:00:00",
+        "end_datetime": "2021-01-12T12:00:00",
+    }
+    ```
+- Response:
+    ```json
+    {
+        "success": true,
+        "created": {
+            "id": 7, //created event id
+            "address": "event venue",
+            "description": "event description",
+            "start_datetime": "2021-01-12T10:00:00",
+            "end_datetime": "2021-01-12T12:00:00",
+            "name": "event name",
+            "organisation": {
+                "id": 1,
+                "name": "my charity organisation"
+            },
+            "participants": []
+        }
+    }
+    ```
 
 #### PATCH /events/{event_id}
+Update an existing event. Authenticated organisation users can only update their own events. 
+- Permission: Organisation users only
+- Request Body: 
+    ```json
+    {
+        "organisation_id": 1, //required
+        "name": "updated name",
+        "address": "new venue",
+        "description": "new description",
+        "start_datetime": "2021-01-12T10:00:00",
+        "end_datetime": "2021-01-12T12:00:00"
+    }
+    ```
+- Response:
+    ```json
+    {
+        "success": true,
+        "updated": {
+            "id": 1,
+            "address": "new venue",
+            "description": "new description",
+            "start_datetime": "2021-01-12T10:00:00",
+            "end_datetime": "2021-01-12T12:00:00",
+            "name": "updated name",
+            "organisation": {
+                "id": 1,
+                "name": "my charity organisation"
+            },
+            "participants": [
+                {
+                    "id": 1,
+                    "name": "Tom"
+                },
+                {
+                    "id": 2,
+                    "name": "Sally"
+                }
+            ]
+        }
+    }
+    ```
 
 #### DELETE /events/{event_id}
+Delete an event. Authenticated organisation users can only delete their own events. 
+- Permission: Organisation users only
+- Request Body: None
+- Response:
+    ```json
+    {
+        "success": true,
+        "deleted": 7  //event_id of deleted event
+    }
+    ```
+
 
 #### POST /events/{event_id}/participants
+Add a new user to event participant list. Authenticated users can only add themselves to an event. 
+- Permission: Volunteer users only
+- Request Body: 
+    ```json
+    {
+        "user_id": 1
+    }
+    ```
+- Response:
+    ```json
+    {
+        "success": true,
+        "updated": {
+            "event_id": 1, 
+            "event_participants": [1, 2, 10] //updated event participant ids
+        }
+    }
+    ```
 
 #### DELETE /events/{event_id}/participants
+Remove a user from event participant list. Authenticated users can only remove themselves from an event. 
+- Permission: Volunteer users only
+- Request Body: 
+    ```json
+    {
+        "user_id": 1
+    }
+    ```
+- Response:
+    ```json
+    {
+        "success": true,
+        "updated": {
+            "event_id": 1, 
+            "event_participants": [2, 10] //updated event participant ids
+        }
+    }
+    ```
 
 #### GET /organisations
+Get general information for all organisations
+- Permission: Public
+- Request Body: None
+- Response:
+    ```json
+    {
+        "success": true,
+        "data": [
+            {
+                "id": 1,
+                "name": "my charity organisation",
+                "description": "A new charity",
+                "email_contact": "mycharity@test.com",
+                "phone_contact": "1111111",
+                "website": "http://mycharityorganisation.com"
+            }, ...]
+    }
+    ```
 
 #### GET /organisations/{organisation_id}
-
-#### GET /categories
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Sample return
-```
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-```
-
-#### GET /questions
-- Fetches a list of question objects and the total number of boos of the result set. Results are paginated n groups of 10. 
-- Rquest Arguments: 
-    - category - pass in a category id to return questions only from that category and the total number of qeustions for that category.
-    - page - page number
-- Sample return 
-```
-{
-    "questions": [
-        {
-            "answer": "Maya Angelou",
-            "category": 4,
-            "difficulty": 2,
-            "id": 5,
-            "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
-        },
-        {
-            "answer": "Muhammad Ali",
-            "category": 4,
-            "difficulty": 1,
-            "id": 9,
-            "question": "What boxer's original name is Cassius Clay?"
-        },
-        {
-            "answer": "Apollo 13",
-            "category": 5,
-            "difficulty": 4,
-            "id": 2,
-            "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
-        },
-        {
-            "answer": "Tom Cruise",
-            "category": 5,
-            "difficulty": 4,
-            "id": 4,
-            "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
-        },
-        {
-            "answer": "Edward Scissorhands",
-            "category": 5,
-            "difficulty": 3,
-            "id": 6,
-            "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-        },
-        {
-            "answer": "Brazil",
-            "category": 6,
-            "difficulty": 3,
-            "id": 10,
-            "question": "Which is the only team to play in every soccer World Cup tournament?"
-        },
-        {
-            "answer": "Uruguay",
-            "category": 6,
-            "difficulty": 4,
-            "id": 11,
-            "question": "Which country won the first ever soccer World Cup in 1930?"
-        },
-        {
-            "answer": "George Washington Carver",
-            "category": 4,
-            "difficulty": 2,
-            "id": 12,
-            "question": "Who invented Peanut Butter?"
-        },
-        {
-            "answer": "Lake Victoria",
-            "category": 3,
-            "difficulty": 2,
-            "id": 13,
-            "question": "What is the largest lake in Africa?"
-        },
-        {
-            "answer": "The Palace of Versailles",
-            "category": 3,
-            "difficulty": 3,
-            "id": 14,
-            "question": "In which royal palace would you find the Hall of Mirrors?"
+Get all information for a single organisation, included past and upcoming events.
+- Permission: Public
+- Request Body: None
+- Response:
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 1,
+            "name": "my charity organisation",
+            "description": "A new charity",
+            "email_contact": "mycharity@test.com",
+            "phone_contact": "1111111",
+            "website": "http://mycharityorganisation.com",
+            "past_events": [{
+                "id": 1,
+                "name": "event name",
+                "address": "event venue",
+                "description": "event description",
+                "start_datetime": "2020-01-12T10:00:00",
+                "end_datetime": "2020-01-12T12:00:00",
+                "participants": [
+                    {
+                        "id": 1,
+                        "name": "Tom"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Sally"
+                    }
+                ]
+            }, ...],
+            "upcoming_events": [{
+                "id": 10,
+                "name": "event name",
+                "address": "event venue",
+                "description": "event description",
+                "start_datetime": "2022-01-12T10:00:00",
+                "end_datetime": "2022-01-12T12:00:00",
+                "participants": [
+                    {
+                        "id": 1,
+                        "name": "Tom"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Sally"
+                    }
+                ]
+            }, ...],
         }
-    ],
-    "success": true,
-    "total_questions": 20
-}
-```
-
-#### POST /questions
-- Creates a new question. Returns the id of the created question if success. 
-- Include in the question, answer, difficulty and category for the new question in the request body like this example:
-{
-    "question": "newquestion",
-    "answer": "myanswer",
-    "difficulty": "1",
-    "category": "4"
-}
-```
-- Sample return
-```
-{
-    'success': True,
-    'created': 10
-}
-```
-
-#### POST /questions/search
-- Search for questions that contains a search term. Will return all questions for which the search term is a substring of the question. 
-- Include the search term in the request body like this example:
-{
-    "search": "penicillin"
-}
-```
-- Sample return
-```
-{
-    "questions": [
-        {
-            "answer": "Alexander Fleming",
-            "category": 1,
-            "difficulty": 3,
-            "id": 21,
-            "question": "Who discovered penicillin?"
-        }
-    ],
-    "success": true,
-    "total_questions": 1
-}
-```
-
-#### DELETE /questions/{question_id}
-- Delete question of the given question ID if question exist. Returns the id of the deleted question if success. 
-- Sample return 
-```
-{
-    "success": True,
-    "deleted": 1
-}
-```
-
-#### POST /quizzes
-- Return a random question for a given category. 
-- Include a list of the ids of previous_questions along with an object that represents the category in the request body like the example below. Pass in category Id of 0 to get question from all categories.
-```
-{
-    "previous_questions": [3],
-    "quiz_category": {
-        "type": "All",
-        "id": 0
     }
-}
-```
-- Sample return
-```
-{
-    "question": {
-        "answer": "The Palace of Versailles",
-        "category": 3,
-        "difficulty": 3,
-        "id": 14,
-        "question": "In which royal palace would you find the Hall of Mirrors?"
-    },
-    "success": true
-}
-```
+    ```
+
+
 
 
 ## Testing
