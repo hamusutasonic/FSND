@@ -73,7 +73,7 @@ Get all events.
 - Permission: Public
 - Request Body: None
 - Response: 
-    ```json
+    ```
     {
         "success": true,
         "data": [{
@@ -107,7 +107,7 @@ Get details of a specific event
 - Permission: Public
 - Request Body: None
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "data": {
@@ -140,7 +140,7 @@ Get details of a specific event
 Create a new event. 
 - Permission: Organisation users only
 - Request Body: 
-    ```json
+    ```
     {
         "name": "event name", //required
         "organisation_id": 1, //required
@@ -151,7 +151,7 @@ Create a new event.
     }
     ```
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "created": {
@@ -174,7 +174,7 @@ Create a new event.
 Update an existing event. Authenticated organisation users can only update their own events. 
 - Permission: Organisation users only
 - Request Body: 
-    ```json
+    ```
     {
         "organisation_id": 1, //required
         "name": "updated name",
@@ -185,7 +185,7 @@ Update an existing event. Authenticated organisation users can only update their
     }
     ```
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "updated": {
@@ -218,7 +218,7 @@ Delete an event. Authenticated organisation users can only delete their own even
 - Permission: Organisation users only
 - Request Body: None
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "deleted": 7  //event_id of deleted event
@@ -230,13 +230,13 @@ Delete an event. Authenticated organisation users can only delete their own even
 Add a new user to event participant list. Authenticated users can only add themselves to an event. 
 - Permission: Volunteer users only
 - Request Body: 
-    ```json
+    ```
     {
         "user_id": 1
     }
     ```
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "updated": {
@@ -250,13 +250,13 @@ Add a new user to event participant list. Authenticated users can only add thems
 Remove a user from event participant list. Authenticated users can only remove themselves from an event. 
 - Permission: Volunteer users only
 - Request Body: 
-    ```json
+    ```
     {
         "user_id": 1
     }
     ```
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "updated": {
@@ -271,7 +271,7 @@ Get general information for all organisations
 - Permission: Public
 - Request Body: None
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "data": [
@@ -291,7 +291,7 @@ Get all information for a single organisation, included past and upcoming events
 - Permission: Public
 - Request Body: None
 - Response:
-    ```json
+    ```
     {
         "success": true,
         "data": {
